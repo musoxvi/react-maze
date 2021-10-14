@@ -3,7 +3,7 @@ import { mazeActions } from "./actions";
 import { ContextProps } from "./models/maze.models";
 import { initialState, mazeReducer } from "./reducers";
 
-export const MazeContext = createContext<Partial<ContextProps>>({});
+export const MazeContext = createContext({} as ContextProps);
 
 export const MazeProvider: FC = ({ children }) => {
   const [state, dispatch] = useReducer(mazeReducer, initialState);

@@ -43,6 +43,12 @@ const StartGame: FC<Props> = ({ handleSubmit }) => {
     setScoreList(items);
   };
 
+  /**
+   * compareSteps
+   * @param {ListType} a
+   * @param {ListType} b
+   * @returns {1 | -1 | 0}
+   */
   const compareSteps = (a: ListType, b: ListType) => {
     if (a.steps < b.steps) {
       return -1;
@@ -55,16 +61,16 @@ const StartGame: FC<Props> = ({ handleSubmit }) => {
 
   const BestScoresList = () => (
     <List>
-      {!!scoreList.length && (
+      {!!scoreList?.length && (
         <ListItemHeader>
-          <div>index</div>
+          <div>Pos</div>
           <div>Name</div>
           <div>Steps</div>
           <div>Date</div>
         </ListItemHeader>
       )}
 
-      {scoreList.length ? (
+      {scoreList?.length ? (
         scoreList
           .sort(compareSteps)
           .slice(0, 10)

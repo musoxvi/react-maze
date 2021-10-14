@@ -49,6 +49,7 @@ export const ModalStyles = styled.div`
     }
   }
   .close-button {
+    cursor: pointer;
     width: 32px;
     height: 32px;
     position: absolute;

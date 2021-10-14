@@ -43,13 +43,7 @@ const Game: FC<Props> = ({ columns, rows }: any) => {
     setWinning,
     setGameStart,
     setRestartGame,
-  } = mazeDispatch || {
-    setPlayerPosition: () => {},
-    setSteps: () => {},
-    setWinning: () => {},
-    setGameStart: () => {},
-    setRestartGame: () => {},
-  };
+  } = mazeDispatch || {};
 
   useEffect(() => {
     if (type === "exit") {
@@ -147,7 +141,6 @@ const Game: FC<Props> = ({ columns, rows }: any) => {
         <StartGame handleSubmit={handleSubmit} />
       ) : (
         <Container
-          className="game"
           ref={(game) => game && game.focus()}
           onKeyDown={movePlayer}
           tabIndex={0}

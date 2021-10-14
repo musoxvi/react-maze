@@ -6,9 +6,7 @@ export const Container = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
-  *:focus {
-    outline: none;
-  }
+  outline: none;
 `;
 
 export const Header = styled.div`

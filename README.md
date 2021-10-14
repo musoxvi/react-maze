@@ -2,7 +2,21 @@
 
 Maze made using React and Typescript! 😎
 
+<a href="https://react-maze.vercel.app/">View Demo</a>
+
 <img src="./src/assets/images/maze.jpeg" alt="minesweeper" />
+
+## Built With
+
+- [React.js](https://reactjs.org/)
+
+## Prerequisites
+
+npm
+
+```sh
+npm install npm@latest -g
+```
 
 ## Installation
 
@@ -15,6 +29,9 @@ $ cd react-maze
 
 # Install dependencies
 $ yarn install or npm install
+
+# Set your environment variables in `.env`
+ REACT_APP_FIREBASE_KEY='ENTER YOUR API'
 ```
 
 ## Available Scripts

@@ -63,9 +63,13 @@ export type Reward = {
   levelAfter: number;
 };
 
+/** Base coins per difficulty tier (Easy → Impossible). Kept low so powers feel earned. */
+const BASE_COINS = [2, 4, 8, 12, 16];
+const HIGH_SCORE_CAP = 5;
+
 /**
- * Coins for finishing a level: harder tiers pay more, plus bonuses for a high
- * score, a first clear and a perfect run.
+ * Coins for finishing a level: harder tiers pay more, plus small bonuses for a
+ * high score, a first clear and a perfect run.
  */
 export const grantReward = (opts: {
   tier: number;
@@ -73,11 +77,15 @@ export const grantReward = (opts: {
   firstClear: boolean;
   perfect: boolean;
 }): Reward => {
+  const tier = Math.min(Math.max(opts.tier, 0), BASE_COINS.length - 1);
   const breakdown = [
-    { label: "Level complete", coins: 10 + opts.tier * 5 },
-    { label: "High score", coins: Math.max(0, Math.floor((opts.score - 900) / 20)) },
-    { label: "First clear", coins: opts.firstClear ? 25 : 0 },
-    { label: "Perfect run", coins: opts.perfect ? 10 : 0 },
+    { label: "Level complete", coins: BASE_COINS[tier] },
+    {
+      label: "High score",
+      coins: Math.min(HIGH_SCORE_CAP, Math.max(0, Math.floor((opts.score - 900) / 50))),
+    },
+    { label: "First clear", coins: opts.firstClear ? 5 + tier * 3 : 0 },
+    { label: "Perfect run", coins: opts.perfect ? (tier < 2 ? 3 : 5) : 0 },
   ].filter((line) => line.coins > 0);
 
   const coins = breakdown.reduce((sum, line) => sum + line.coins, 0);

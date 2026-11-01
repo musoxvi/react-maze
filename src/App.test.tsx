@@ -195,13 +195,16 @@ test("lantern widens vision and compass charges count down", async () => {
 
 test("wallet: rewards, buying and using powers", async () => {
   const { grantReward, buyPower, consumePower, getWallet, levelFromXp } = await import("./service/wallet");
-  const reward = grantReward({ tier: 2, score: 1000, firstClear: true, perfect: true });
-  // 10 + 2*5 base, +5 high score, +25 first clear, +10 perfect
-  expect(reward.coins).toBe(60);
-  expect(getWallet().coins).toBe(60);
+  // Easy pays little; a repeat run without bonuses is just the base
+  expect(grantReward({ tier: 0, score: 1000, firstClear: false, perfect: false }).coins).toBe(2 + 2);
+  // Hard, first clear and perfect: 8 base + 2 high score + 11 first clear + 5 perfect
+  expect(grantReward({ tier: 2, score: 1000, firstClear: true, perfect: true }).coins).toBe(26);
+  // High score bonus is capped
+  expect(grantReward({ tier: 4, score: 5000, firstClear: false, perfect: false }).coins).toBe(16 + 5);
+  expect(getWallet().coins).toBe(4 + 26 + 21);
 
   expect(buyPower("dash", 40)).not.toBeNull();
-  expect(buyPower("dash", 40)).toBeNull(); // only 20 coins left
+  expect(buyPower("dash", 40)).toBeNull(); // only 11 coins left
   expect(getWallet().inventory.dash).toBe(1);
   expect(consumePower("dash")).toBe(true);
   expect(consumePower("dash")).toBe(false);

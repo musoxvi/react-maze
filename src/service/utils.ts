@@ -1,20 +1,66 @@
 import { db } from "./Firebase";
+import { LevelId } from "../constants/levels";
+import { saveLocalScore } from "./records";
+import type { PowerId } from "../constants/powers";
 
-export const saveScore = (playerName: string, steps: number) => {
-  const options = {
+export type Score = {
+  id: number;
+  playerName: string;
+  steps: number;
+  date: string;
+  /** Scores saved before levels existed have no level: treat them as "easy" */
+  level?: LevelId;
+  timeMs?: number;
+  /** Shortest possible moves on the maze that was played */
+  best?: number;
+  /** Bonus points from items */
+  points?: number;
+  /** Powers used during the run */
+  powers?: PowerId[];
+};
+
+/**
+ * Saves a finished run locally (always, works offline) and to the global
+ * leaderboard (best effort). Returns whether it is a new personal record.
+ */
+export const saveScore = (input: Omit<Score, "id" | "date">) => {
+  const date = new Date().toLocaleDateString("en-AU", {
     month: "short",
     day: "2-digit",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    formatMatcher: "best fit",
-    hour12: true,
-  };
-  const today = new Date();
-  db.collection("scores").add({
-    id: new Date().getTime(),
-    playerName,
-    steps,
-    date: today.toLocaleDateString("en-AU", options as any),
   });
+  const score: Score = { ...input, id: Date.now(), date };
+  const { isRecord } = saveLocalScore(score);
+
+  if (navigator.onLine) {
+    // Firestore rejects undefined fields, so drop optional ones that are unset
+    const data = Object.fromEntries(Object.entries(score).filter(([, value]) => value !== undefined));
+    try {
+      db.collection("scores")
+        .add(data)
+        .catch((error) => console.error("Could not save score", error));
+    } catch (error) {
+      // Invalid data throws synchronously; never let it break the game
+      console.error("Could not save score", error);
+    }
+  }
+  return { isRecord };
+};
+
+export const getScores = async (): Promise<Score[]> => {
+  if (!navigator.onLine) return [];
+  try {
+    const snapshot = await db.collection("scores").get();
+    return snapshot.docs.map((doc) => doc.data() as Score);
+  } catch (error) {
+    console.error("Could not load scores", error);
+    return [];
+  }
+};
+
+export const formatTime = (ms: number) => {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  return `${minutes}:${seconds}`;
 };

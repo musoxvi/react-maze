@@ -1,0 +1,20 @@
+import { useEffect, useState } from "react";
+
+/** Tracks the browser's online/offline status. */
+const useOnline = () => {
+  const [online, setOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
+
+  return online;
+};
+
+export default useOnline;

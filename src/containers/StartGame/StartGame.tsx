@@ -1,132 +1,175 @@
-import { FC, useState, useEffect } from "react";
+import { FC, FormEvent, useMemo, useState } from "react";
+import { LEVELS, LevelId, View, VIEW_LABEL } from "../../constants/levels";
+import { Button } from "../../components/ui/styles";
+import { finalScore, getCompletedLevels, getPersonalBest } from "../../service/records";
+import HighScores from "./HighScores";
+import Shop from "./Shop";
+import useWallet from "../../hooks/useWallet";
+import { levelFromXp, xpForLevel } from "../../service/wallet";
 import {
-  Button,
-  RecordButton,
-  InputField,
-  Label,
-  Main,
-  Container,
-  Image,
-  Video,
-  Content,
-  List,
-  ListItem,
-  ListItemHeader,
+  Wrapper,
+  Panel,
+  Brand,
+  Title,
+  Subtitle,
+  Form,
+  Field,
+  FieldLabel,
+  Input,
+  LevelGroup,
+  GroupTitle,
+  LevelGrid,
+  LevelOption,
+  LevelName,
+  LevelDescription,
+  LevelMeta,
+  Pips,
+  Actions,
+  Hint,
+  WalletBar,
 } from "./styles";
-import mazeImg from "../../assets/images/maze.jpeg";
-import myVideo from "../../assets/videos/space.mov";
-import Modal from "../../components/Modal/Modal";
-import { db } from "../../service/Firebase";
 
 type Props = {
-  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-};
-type ListType = {
-  id: number;
-  playerName: string;
-  steps: number;
-  date: number;
+  onStart: (playerName: string, levelId: LevelId) => void;
+  defaultName?: string;
+  defaultLevel?: LevelId;
 };
 
-const StartGame: FC<Props> = ({ handleSubmit }) => {
-  const [showModal, setShowModal] = useState(false);
-  const [scoreList, setScoreList] = useState<ListType[] | []>([]);
+const VIEWS: { view: View; title: string }[] = (["2d", "3d", "fp"] as View[]).map((view) => ({
+  view,
+  title: VIEW_LABEL[view],
+}));
 
-  useEffect(() => {
-    getScoreList();
-  }, []);
+const StartGame: FC<Props> = ({ onStart, defaultName = "", defaultLevel = "easy" }) => {
+  const [name, setName] = useState(defaultName);
+  const [levelId, setLevelId] = useState<LevelId>(
+    LEVELS.some((level) => level.id === defaultLevel) ? defaultLevel : "easy"
+  );
+  const [showScores, setShowScores] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const wallet = useWallet();
+  const playerLevel = levelFromXp(wallet.xp);
+  const levelStart = xpForLevel(playerLevel);
+  const progress = (wallet.xp - levelStart) / (xpForLevel(playerLevel + 1) - levelStart);
 
-  const getScoreList = async () => {
-    const docRef = db.collection("scores");
-    const collections = await docRef.get();
-    const items: any = collections.docs.map((item) => item.data());
-    setScoreList(items);
-  };
-
-  /**
-   * compareSteps
-   * @param {ListType} a
-   * @param {ListType} b
-   * @returns {1 | -1 | 0}
-   */
-  const compareSteps = (a: ListType, b: ListType) => {
-    if (a.steps < b.steps) {
-      return -1;
-    }
-    if (a.steps > b.steps) {
-      return 1;
-    }
-    return 0;
-  };
-
-  const BestScoresList = () => (
-    <List>
-      {!!scoreList?.length && (
-        <ListItemHeader>
-          <div>Pos</div>
-          <div>Name</div>
-          <div>Steps</div>
-          <div>Date</div>
-        </ListItemHeader>
-      )}
-
-      {scoreList?.length ? (
-        scoreList
-          .sort(compareSteps)
-          .slice(0, 10)
-          .map((item, key) => (
-            <ListItem key={key}>
-              <div>{key + 1}</div>
-              <div>{item.playerName}</div>
-              <div>{item.steps}</div>
-              <div>{item.date}</div>
-            </ListItem>
-          ))
-      ) : (
-        <ListItem>No scores yet 🥺</ListItem>
-      )}
-    </List>
+  // Read once per visit to the menu
+  const completed = useMemo(getCompletedLevels, []);
+  const bests = useMemo(
+    () => Object.fromEntries(LEVELS.map((level) => [level.id, getPersonalBest(level.id)])),
+    []
   );
 
-  return (
-    <>
-      {showModal && (
-        <Modal
-          title="Top 10 scores"
-          customContent={<BestScoresList />}
-          buttonText="Cancel"
-          setShowModal={setShowModal}
-          onClick={() => setShowModal(false)}
-        />
-      )}
-      <Container>
-        <Video autoPlay loop muted className="video">
-          <source src={myVideo} type="video/mp4" />
-          Your browser does not support the video tag.
-        </Video>
-        <Content>
-          <Image src={mazeImg} alt="maze img" />
-          <form onSubmit={handleSubmit}>
-            <Main>
-              <InputField
-                name="playerName"
-                type="text"
-                autoComplete="off"
-                required
-              />
-              <Label htmlFor="name">Player name</Label>
-            </Main>
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const playerName = name.trim();
+    if (playerName) onStart(playerName, levelId);
+  };
 
-            <Button value="Start game" type="submit" />
-            <RecordButton
-              value="View 10 high scores"
-              type="button"
-              onClick={() => setShowModal(true)}
+  return (
+    <Wrapper>
+      {showScores && (
+        <HighScores initialLevel={levelId} onClose={() => setShowScores(false)} />
+      )}
+      {showShop && <Shop onClose={() => setShowShop(false)} />}
+
+      <Panel>
+        <Brand>
+          <Title>Maze</Title>
+          <Subtitle>Find the door in as few moves as you can.</Subtitle>
+        </Brand>
+
+        <WalletBar>
+          <span className="level" title={`${wallet.xp} XP`}>
+            ⭐ Level {playerLevel}
+            <span className="xp" aria-hidden="true">
+              <span style={{ width: `${Math.round(progress * 100)}%` }} />
+            </span>
+          </span>
+          <span className="coins">{wallet.coins} 🪙</span>
+          <button type="button" onClick={() => setShowShop(true)}>
+            🛒 Shop
+          </button>
+        </WalletBar>
+
+        <Form onSubmit={handleSubmit}>
+          <Field>
+            <FieldLabel htmlFor="playerName">Player name</FieldLabel>
+            <Input
+              id="playerName"
+              name="playerName"
+              type="text"
+              autoComplete="nickname"
+              maxLength={20}
+              placeholder="e.g. Ada"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoFocus
             />
-          </form>
-        </Content>
-      </Container>
-    </>
+          </Field>
+
+          <Field as="fieldset">
+            <FieldLabel as="legend">Level</FieldLabel>
+            {VIEWS.map(({ view, title }) => {
+              const levels = LEVELS.filter((level) => level.view === view);
+              return (
+                <LevelGroup key={view}>
+                  <GroupTitle>{title}</GroupTitle>
+                  <LevelGrid>
+                    {levels.map((level, index) => {
+                      const best = bests[level.id];
+                      return (
+                        <LevelOption key={level.id} $selected={level.id === levelId}>
+                          <input
+                            type="radio"
+                            name="level"
+                            value={level.id}
+                            aria-label={`${title} ${level.name}`}
+                            checked={level.id === levelId}
+                            onChange={() => setLevelId(level.id)}
+                          />
+                          <Pips aria-hidden="true">
+                            {levels.map((_, pip) => (
+                              <span key={pip} data-on={pip <= index} />
+                            ))}
+                          </Pips>
+                          <LevelName>
+                            {level.name}
+                            {completed.includes(level.id) && (
+                              <span className="done" aria-label="completed"> ✓</span>
+                            )}
+                          </LevelName>
+                          <LevelDescription>{level.description}</LevelDescription>
+                          {best && (
+                            <LevelMeta>
+                              Best: {finalScore(best) ?? "—"} pts
+                            </LevelMeta>
+                          )}
+                        </LevelOption>
+                      );
+                    })}
+                  </LevelGrid>
+                </LevelGroup>
+              );
+            })}
+          </Field>
+
+          <Actions>
+            <Button type="submit" disabled={!name.trim()}>
+              Start game
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setShowScores(true)}>
+              High scores
+            </Button>
+          </Actions>
+        </Form>
+
+        <Hint>
+          Move with <kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> or{" "}
+          <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>
+        </Hint>
+      </Panel>
+    </Wrapper>
   );
 };
 

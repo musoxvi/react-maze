@@ -35,5 +35,8 @@
   "resolutions": {
     "@grpc/grpc-js": "^1.13.6",
     "@types/react": "^17.0.0"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

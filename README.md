@@ -4,7 +4,11 @@ A maze game in **2D, 3D and first person**, built with React, TypeScript and thr
 
 <a href="https://react-maze.vercel.app/">View demo</a>
 
-<img src="./src/assets/images/maze.jpeg" alt="Maze game" />
+| 2D | 3D |
+|---|---|
+| <img src="./docs/screenshots/2d.jpg" alt="2D maze with bonus items" /> | <img src="./docs/screenshots/3d.jpg" alt="3D maze with the player and a gem" /> |
+| **First person** | **Menu** |
+| <img src="./docs/screenshots/first-person.jpg" alt="First-person corridor with minimap" /> | <img src="./docs/screenshots/menu.jpg" alt="Menu with levels, coins and shop" /> |
 
 ## Features
 

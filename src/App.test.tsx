@@ -217,3 +217,15 @@ test("route to exit starts next to the player", async () => {
   expect(route[0]).toEqual({ row: 1, col: 2 });
   expect(route[route.length - 1]).toEqual({ row: 3, col: 4 });
 });
+
+test("global scores never send undefined fields", async () => {
+  const add = vi.fn().mockResolvedValue(undefined);
+  vi.doMock("./service/Firebase", () => ({ db: { collection: () => ({ add }) } }));
+  vi.resetModules();
+  const { saveScore } = await vi.importActual<typeof import("./service/utils")>("./service/utils");
+  saveScore({ playerName: "Ada", steps: 10, level: "easy", powers: undefined, best: undefined });
+  const sent = add.mock.calls[0][0];
+  expect(Object.values(sent)).not.toContain(undefined);
+  expect(sent).not.toHaveProperty("powers");
+  vi.doUnmock("./service/Firebase");
+});

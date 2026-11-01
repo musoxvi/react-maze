@@ -33,9 +33,16 @@ export const saveScore = (input: Omit<Score, "id" | "date">) => {
   const { isRecord } = saveLocalScore(score);
 
   if (navigator.onLine) {
-    db.collection("scores")
-      .add(score)
-      .catch((error) => console.error("Could not save score", error));
+    // Firestore rejects undefined fields, so drop optional ones that are unset
+    const data = Object.fromEntries(Object.entries(score).filter(([, value]) => value !== undefined));
+    try {
+      db.collection("scores")
+        .add(data)
+        .catch((error) => console.error("Could not save score", error));
+    } catch (error) {
+      // Invalid data throws synchronously; never let it break the game
+      console.error("Could not save score", error);
+    }
   }
   return { isRecord };
 };

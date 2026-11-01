@@ -1,5 +1,5 @@
-import { ReactComponent as Player } from "../../assets/svg/player.svg";
-import { ReactComponent as Door } from "../../assets/svg/door.svg";
+import Player from "../../assets/svg/player.svg?react";
+import Door from "../../assets/svg/door.svg?react";
 import { Path, Wall, PlayerContainer, ExitContainer } from "./styles";
 
 type Props = {

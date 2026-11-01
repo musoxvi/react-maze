@@ -1,5 +1,6 @@
 import { FC, memo, useEffect, useRef, useState } from "react";
 import { cellKey, isInSight, Position } from "../../constants/levels";
+import { ITEM_INFO, ItemType } from "../../utils/items";
 import Door from "./Door";
 import Walker from "./Walker";
 import { Board, Player } from "./styles";
@@ -9,7 +10,10 @@ type Props = {
   position: Position;
   fogRadius?: number;
   revealed: Set<string>;
+  items: Record<string, ItemType>;
   isWinning: boolean;
+  /** Cells the compass is pointing along */
+  hint?: Set<string>;
 };
 
 const CELL_CLASS: Record<string, string> = {
@@ -19,7 +23,7 @@ const CELL_CLASS: Record<string, string> = {
   E: "exit",
 };
 
-const GameBoard: FC<Props> = ({ grid, position, fogRadius, revealed, isWinning }) => {
+const GameBoard: FC<Props> = ({ grid, position, fogRadius, revealed, items, isWinning, hint }) => {
   const size = grid.length;
   const [walking, setWalking] = useState(false);
   const [facingLeft, setFacingLeft] = useState(false);
@@ -48,14 +52,23 @@ const GameBoard: FC<Props> = ({ grid, position, fogRadius, revealed, isWinning }
   return (
     <Board style={{ ["--size" as string]: size }} aria-label="Maze board">
       {grid.flatMap((line, row) =>
-        [...line].map((char, col) => (
-          <div
-            key={`${row}-${col}`}
-            className={`cell ${CELL_CLASS[char]}${fogClass(row, col)}`}
-          >
-            {char === "E" && <Door />}
-          </div>
-        ))
+        [...line].map((char, col) => {
+          const fog = fogClass(row, col);
+          const item = items[cellKey(row, col)];
+          return (
+            <div
+              key={`${row}-${col}`}
+              className={`cell ${CELL_CLASS[char]}${fog}${hint?.has(cellKey(row, col)) ? " hint" : ""}`}
+            >
+              {char === "E" && <Door />}
+              {item && fog !== " fog" && (
+                <span className="item" role="img" aria-label={ITEM_INFO[item].label}>
+                  {ITEM_INFO[item].icon}
+                </span>
+              )}
+            </div>
+          );
+        })
       )}
       <Player
         className={[walking && "walking", facingLeft && "left", isWinning && "won"]

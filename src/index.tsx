@@ -9,3 +9,12 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById("root")
 );
+
+// Offline support: only in production builds (the dev server changes constantly)
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch((error) => {
+      console.error("Service worker registration failed", error);
+    });
+  });
+}

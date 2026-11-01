@@ -10,7 +10,7 @@ export const Wrapper = styled.main`
 `;
 
 export const Panel = styled(Card)`
-  width: min(520px, 100%);
+  width: min(760px, 100%);
   padding: 36px 32px 28px;
   display: flex;
   flex-direction: column;
@@ -86,12 +86,36 @@ export const Input = styled.input`
   }
 `;
 
-export const LevelGrid = styled.div`
+export const LevelGroup = styled.div`
   /* legends ignore the fieldset's flex gap */
   margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  & + & {
+    margin-top: 14px;
+  }
+`;
+
+export const GroupTitle = styled.span`
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+`;
+
+export const LevelGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  @media (max-width: 460px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 `;
 
 export const LevelOption = styled.label<{ $selected: boolean }>`
@@ -142,6 +166,17 @@ export const Pips = styled.div`
 
 export const LevelName = styled.span`
   font-weight: 700;
+
+  .done {
+    color: var(--accent);
+  }
+`;
+
+export const LevelMeta = styled.span`
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
 `;
 
 export const LevelDescription = styled.span`
@@ -184,11 +219,114 @@ export const Hint = styled.p`
   }
 `;
 
+export const WalletBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  margin-top: -12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 700;
+
+  .level {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+  }
+  .xp {
+    flex: 1;
+    max-width: 160px;
+    height: 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+  }
+  .xp span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--violet));
+  }
+  .coins {
+    color: #fcd34d;
+    font-variant-numeric: tabular-nums;
+  }
+  button {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid rgba(252, 211, 77, 0.5);
+    background: rgba(252, 211, 77, 0.1);
+    color: #fcd34d;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button:hover {
+    background: rgba(252, 211, 77, 0.2);
+  }
+`;
+
+export const ShopList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+export const ShopItem = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+
+  .icon {
+    font-size: 28px;
+  }
+  .info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+  }
+  .info strong {
+    font-size: 16px;
+    color: var(--text);
+  }
+  kbd {
+    font-family: inherit;
+    font-size: 11px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0 4px;
+    color: var(--text-muted);
+  }
+  .owned {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  button {
+    flex-shrink: 0;
+    min-width: 88px;
+  }
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+`;
+
 export const Tabs = styled.div`
   display: flex;
   gap: 6px;
   padding: 4px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.05);
 `;

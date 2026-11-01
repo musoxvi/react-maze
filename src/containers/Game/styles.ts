@@ -4,7 +4,7 @@ import { Card } from "../../components/ui/styles";
 const TOUCH = "(pointer: coarse), (max-width: 640px)";
 
 export const Screen = styled.main`
-  --chrome: 150px;
+  --chrome: 230px;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -19,8 +19,7 @@ export const Screen = styled.main`
 `;
 
 export const Hud = styled(Card)`
-  width: min(94vw, calc(100dvh - var(--chrome)), 780px);
-  min-width: min(100%, 340px);
+  width: min(94vw, 780px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -88,6 +87,41 @@ export const HudButtons = styled.div`
   }
 `;
 
+export const OfflineBadge = styled.div`
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fde68a;
+  background: rgba(120, 80, 0, 0.55);
+  border: 1px solid rgba(253, 230, 138, 0.4);
+  backdrop-filter: blur(8px);
+`;
+
+export const RecordNote = styled.p`
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(94, 234, 212, 0.1);
+  border: 1px solid rgba(94, 234, 212, 0.35);
+`;
+
+export const Loading = styled.div`
+  width: min(94vw, 1100px);
+  height: calc(100dvh - var(--chrome, 180px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+`;
+
 export const DPad = styled.div`
   display: none;
 
@@ -133,9 +167,142 @@ export const DPad = styled.div`
   .right svg { transform: rotate(90deg); }
 `;
 
+export const Toast = styled.div`
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface-strong);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 24px rgba(94, 234, 212, 0.35);
+  white-space: nowrap;
+  pointer-events: none;
+`;
+
+export const Legend = styled.p`
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+
+  kbd {
+    display: inline-block;
+    min-width: 20px;
+    padding: 0 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.06);
+    font-family: inherit;
+    color: var(--text);
+    text-align: center;
+  }
+`;
+
+export const PowerBar = styled.div`
+  display: flex;
+  gap: 8px;
+
+  button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: border-color 160ms ease, background-color 160ms ease;
+  }
+  button:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  button[aria-pressed="true"] {
+    border-color: #fcd34d;
+    box-shadow: 0 0 12px rgba(252, 211, 77, 0.4);
+  }
+  .icon {
+    font-size: 18px;
+  }
+  .count {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  kbd {
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0 4px;
+  }
+  .live {
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    min-width: 18px;
+    padding: 0 4px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #3b2a00;
+    background: #fcd34d;
+  }
+`;
+
+export const RewardBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: rgba(252, 211, 77, 0.08);
+  border: 1px solid rgba(252, 211, 77, 0.4);
+
+  strong {
+    color: #fcd34d;
+    font-size: 18px;
+  }
+  span {
+    font-size: 13px;
+  }
+  em {
+    font-style: normal;
+    font-weight: 700;
+    color: var(--accent);
+  }
+`;
+
 export const Results = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
+
+  @media (max-width: 520px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .highlight {
+    border-color: var(--accent);
+    background: rgba(94, 234, 212, 0.1);
+  }
+  .highlight strong {
+    color: var(--accent);
+  }
   gap: 10px;
   margin-bottom: 8px;
 

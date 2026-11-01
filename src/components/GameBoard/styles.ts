@@ -5,6 +5,11 @@ const exitGlow = keyframes`
   50% { box-shadow: inset 0 0 0 1px rgba(122, 215, 167, 0.9), 0 0 20px rgba(122, 215, 167, 0.6); }
 `;
 
+const floatItem = keyframes`
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8%) scale(1.08); }
+`;
+
 const swingA = keyframes`
   0%, 100% { transform: rotate(16deg); }
   50% { transform: rotate(-16deg); }
@@ -36,7 +41,8 @@ export const Board = styled.div`
   grid-template-columns: repeat(var(--size), 1fr);
   grid-template-rows: repeat(var(--size), 1fr);
   /* Fill the space left by the HUD (and the d-pad on touch screens) */
-  width: min(94vw, calc(100dvh - var(--chrome, 180px)), 780px);
+  --board: min(94vw, calc(100dvh - var(--chrome, 180px)), 780px);
+  width: var(--board);
   aspect-ratio: 1;
   padding: 6px;
   border-radius: 4px;
@@ -92,6 +98,28 @@ export const Board = styled.div`
     opacity: 0.35;
     animation: none;
   }
+  .hint::after {
+    content: "";
+    position: absolute;
+    inset: 32%;
+    border-radius: 50%;
+    background: #fcd34d;
+    box-shadow: 0 0 8px 2px rgba(252, 211, 77, 0.7);
+    animation: ${floatItem} 1.2s ease-in-out infinite;
+  }
+
+  .item {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--board) / var(--size) * 0.62);
+    line-height: 1;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+    animation: ${floatItem} 1.6s ease-in-out infinite;
+  }
+
   .fog {
     background: rgba(3, 2, 8, 0.96);
     box-shadow: none;

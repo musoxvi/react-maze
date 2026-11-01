@@ -1,10 +1,9 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import svgr from "vite-plugin-svgr";
 
 export default defineConfig({
-  plugins: [react(), svgr()],
+  plugins: [react()],
   // Keep REACT_APP_* so existing .env and Vercel variables keep working
   envPrefix: ["VITE_", "REACT_APP_"],
   assetsInclude: ["**/*.mov"],

@@ -1,70 +1,75 @@
-import React, { memo, useContext } from "react";
-import mazes from "../../constants/maze";
-import { MazeContext } from "../../contexts/Maze/context";
-import {
-  Cell,
-  AllAdjacentCells,
-  grabAllAdjacentCells,
-} from "../../utils/grabAllAdjacentCells";
-import Block from "../Block/Block";
-import { Body } from "./styles";
+import { FC, memo, useEffect, useRef, useState } from "react";
+import { cellKey, isInSight, Position } from "../../constants/levels";
+import Door from "./Door";
+import Walker from "./Walker";
+import { Board, Player } from "./styles";
 
 type Props = {
-  columns?: number;
-  rows?: number;
-  getAllAdjacentCells: (allAdjacentCells: AllAdjacentCells) => void;
-  getCurrentCell: (currentCell: Cell) => void;
+  grid: string[];
+  position: Position;
+  fogRadius?: number;
+  revealed: Set<string>;
+  isWinning: boolean;
 };
 
-const GameBoard: React.FC<Props> = ({
-  getAllAdjacentCells,
-  getCurrentCell,
-}) => {
-  const { state } = useContext(MazeContext);
+const CELL_CLASS: Record<string, string> = {
+  "#": "wall",
+  ".": "path",
+  S: "path entrance",
+  E: "exit",
+};
 
-  const { playerPosition } = state || { playerPosition: 0 };
+const GameBoard: FC<Props> = ({ grid, position, fogRadius, revealed, isWinning }) => {
+  const size = grid.length;
+  const [walking, setWalking] = useState(false);
+  const [facingLeft, setFacingLeft] = useState(false);
+  const previous = useRef(position);
 
-  /**
-   * renderBoard
-   * @returns {React.ReactNode}
-   */
-  const createBoard = (): React.ReactNode => {
-    let index = 0;
+  // Play the walk cycle for a moment after each move and face the direction of travel
+  useEffect(() => {
+    const dCol = position.col - previous.current.col;
+    const moved = dCol !== 0 || position.row !== previous.current.row;
+    previous.current = position;
+    if (!moved) return;
+    if (dCol !== 0) setFacingLeft(dCol < 0);
+    setWalking(true);
+    const id = window.setTimeout(() => setWalking(false), 320);
+    return () => window.clearTimeout(id);
+  }, [position]);
 
-    return mazes.map((row, rowIndex) => {
-      const maze = row.map((col, colIndex) => {
-        const currentCell = mazes[rowIndex][colIndex];
-        index++;
-
-        if (index === playerPosition) {
-          const allAdjacentCells = grabAllAdjacentCells(
-            mazes,
-            rowIndex,
-            colIndex
-          );
-
-          setTimeout(() => {
-            getCurrentCell(currentCell);
-            getAllAdjacentCells(allAdjacentCells);
-          }, 50);
-        }
-
-        const { type } = col || {};
-        return (
-          <Block
-            key={index}
-            counter={index}
-            playerPosition={playerPosition}
-            type={type}
-          />
-        );
-      });
-
-      return maze;
-    });
+  // "" = visible, " seen" = explored but out of sight, " fog" = never seen
+  const fogClass = (row: number, col: number) => {
+    if (fogRadius === undefined || isWinning || isInSight(position, row, col, fogRadius)) {
+      return "";
+    }
+    return revealed.has(cellKey(row, col)) ? " seen" : " fog";
   };
 
-  return <Body>{createBoard()}</Body>;
+  return (
+    <Board style={{ ["--size" as string]: size }} aria-label="Maze board">
+      {grid.flatMap((line, row) =>
+        [...line].map((char, col) => (
+          <div
+            key={`${row}-${col}`}
+            className={`cell ${CELL_CLASS[char]}${fogClass(row, col)}`}
+          >
+            {char === "E" && <Door />}
+          </div>
+        ))
+      )}
+      <Player
+        className={[walking && "walking", facingLeft && "left", isWinning && "won"]
+          .filter(Boolean)
+          .join(" ")}
+        style={{
+          transform: `translate(${position.col * 100}%, ${position.row * 100}%)`,
+        }}
+        aria-label="Player"
+      >
+        <Walker />
+      </Player>
+    </Board>
+  );
 };
 
 export default memo(GameBoard);

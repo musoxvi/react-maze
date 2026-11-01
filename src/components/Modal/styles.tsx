@@ -1,79 +1,78 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import { Card } from "../ui/styles";
 
-export const Button = styled.button`
-  background-color: #3f51b5;
-  color: white;
-  padding: 16px 24px;
-  border-radius: 5px;
-  outline: 0;
-  text-transform: uppercase;
-  margin: 10px 0px;
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const popIn = keyframes`
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+`;
+
+export const Backdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(5, 4, 18, 0.65);
+  animation: ${fadeIn} 160ms ease;
+`;
+
+export const Dialog = styled(Card)`
+  width: min(560px, 100%);
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-strong);
+  animation: ${popIn} 200ms ease;
+`;
+
+export const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 0;
+`;
+
+export const Title = styled.h2`
+  margin: 0;
+  font-size: 22px;
+`;
+
+export const CloseButton = styled.button`
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
   cursor: pointer;
-  box-shadow: 0px 2px 2px lightgray;
-  transition: ease background-color 250ms;
   &:hover {
-    background-color: #283593;
-  }
-  &:disabled {
-    cursor: default;
-    opacity: 0.7;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
   }
 `;
 
-export const ModalStyles = styled.div`
+export const Body = styled.div`
+  padding: 16px 24px;
+  overflow-y: auto;
+  color: var(--text-muted);
+  line-height: 1.5;
+`;
+
+export const Actions = styled.div`
   display: flex;
-  justify-content: center;
-  min-height: 100vh;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 990;
-  .modal {
-    display: flex;
-    width: 50%;
-    min-height: 200px;
-    height: auto;
-    background: white;
-    border-radius: 8px;
-    padding: 24px;
-    position: relative;
-    flex-direction: column;
-    justify-content: space-between;
-    &__wrapper-button {
-      display: flex;
-      justify-content: end;
-    }
-  }
-  .close-button {
-    cursor: pointer;
-    width: 32px;
-    height: 32px;
-    position: absolute;
-    right: 32px;
-    top: 42px;
-  }
-  #up {
-    border: 2px solid black;
-    transform: rotate(-45deg);
-    position: relative;
-    top: 14px;
-    right: 6px;
-    width: 20px;
-    background-color: black;
-    border-radius: 25px;
-  }
-  #down {
-    border: 2px solid black;
-    transform: rotate(45deg);
-    position: relative;
-    top: 10px;
-    right: 6px;
-    width: 20px;
-    background-color: black;
-    border-radius: 25px;
-  }
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 0 24px 24px;
+  flex-wrap: wrap;
 `;

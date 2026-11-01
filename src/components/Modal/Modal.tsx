@@ -1,47 +1,37 @@
-import { ModalStyles, Button } from "./styles";
+import { FC, ReactNode, useEffect } from "react";
+import { Backdrop, Dialog, Header, Title, CloseButton, Body, Actions } from "./styles";
 
 type Props = {
-  title?: string;
-  content?: string;
-  customContent?: JSX.Element;
-  buttonText: string;
-  setShowModal: (callBack: (prev: boolean) => boolean) => void;
-  onClick: () => void;
+  title: string;
+  onClose: () => void;
+  actions?: ReactNode;
 };
 
-const Modal: React.FC<Props> = ({
-  setShowModal,
-  title = "title",
-  content = "content",
-  buttonText = "buttonText",
-  customContent,
-  onClick,
-}) => {
-  const CloseButton = () => (
-    <div
-      onClick={() => setShowModal((prev: boolean) => !prev)}
-      className="close-button"
-    >
-      <div id="up" />
-      <div id="down" />
-    </div>
-  );
+const Modal: FC<Props> = ({ title, onClose, actions, children }) => {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   return (
-    <ModalStyles>
-      <div className="modal">
-        <div>
-          <CloseButton />
-          <h2>{title}</h2>
-          {customContent ? customContent : <p>{content}</p>}
-        </div>
-        <div className="modal__wrapper-button">
-          <Button type="button" onClick={onClick}>
-            {buttonText}
-          </Button>
-        </div>
-      </div>
-    </ModalStyles>
+    <Backdrop onClick={onClose}>
+      <Dialog
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Header>
+          <Title>{title}</Title>
+          <CloseButton type="button" aria-label="Close" onClick={onClose}>
+            ×
+          </CloseButton>
+        </Header>
+        <Body>{children}</Body>
+        {actions && <Actions>{actions}</Actions>}
+      </Dialog>
+    </Backdrop>
   );
 };
 

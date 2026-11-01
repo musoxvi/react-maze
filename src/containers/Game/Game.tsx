@@ -1,169 +1,224 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-// Dependencies
-import { FC, useContext, memo, useState, useEffect, useCallback } from "react";
+import { FC, useContext, useEffect, useMemo, useRef } from "react";
 import Confetti from "react-confetti";
-// Components
 import GameBoard from "../../components/GameBoard/GameBoard";
-// Hooks
-import { MazeContext } from "../../contexts/Maze/context";
-import useWindowSize from "../../hooks/useWindowSize";
-// Utils
-import { AllAdjacentCells, Cell } from "../../utils/grabAllAdjacentCells";
-import StartGame from "../StartGame/StartGame";
-// Styles
-import { Container, Header, Video, Button } from "./styles";
-import myVideo from "../../assets/videos/space.mov";
 import Modal from "../../components/Modal/Modal";
-import { saveScore } from "../../service/utils";
+import { Button, Scrim, Video } from "../../components/ui/styles";
+import { getLevel, LevelId } from "../../constants/levels";
+import { MazeContext } from "../../contexts/Maze/context";
+import { Direction } from "../../contexts/Maze/models/maze.models";
+import useElapsed from "../../hooks/useElapsed";
+import useWindowSize from "../../hooks/useWindowSize";
+import { formatTime, saveScore } from "../../service/utils";
+import { shortestPath } from "../../utils/shortestPath";
+import StartGame from "../StartGame/StartGame";
+import myVideo from "../../assets/videos/space.mov";
+import {
+  Screen,
+  Hud,
+  HudGroup,
+  PlayerName,
+  LevelBadge,
+  Stat,
+  StatLabel,
+  StatValue,
+  HudButtons,
+  DPad,
+  Results,
+} from "./styles";
 
-type Props = {
-  columns?: number;
-  rows?: number;
+const KEY_TO_DIRECTION: Record<string, Direction> = {
+  ArrowUp: "up",
+  ArrowDown: "down",
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  w: "up",
+  s: "down",
+  a: "left",
+  d: "right",
 };
 
-const Game: FC<Props> = ({ columns, rows }: any) => {
+const STORAGE_KEY = "maze:last-player";
+
+const loadLastPlayer = (): { name?: string; level?: LevelId } => {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const Game: FC = () => {
   const { state, mazeDispatch } = useContext(MazeContext);
-  const { width, height } = useWindowSize();
-
-  const [allAdjacentCells, setAllAdjacentCells] =
-    useState<AllAdjacentCells | null>(null);
-  const [currentCell, setCurrentCell] = useState<Cell | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [playerName, setPlayerName] = useState<string>("");
-
-  const { type } = currentCell || {};
-  const { playerPosition, steps, isWinning, gameStart } = state || {
-    playerPosition: 0,
-    steps: 0,
-  };
-  const { rightCell, topCell, leftCell, bottomCell } = allAdjacentCells || {};
   const {
-    setPlayerPosition,
-    setSteps,
-    setWinning,
-    setGameStart,
-    setRestartGame,
-  } = mazeDispatch || {};
+    gameStart,
+    playerName,
+    levelId,
+    position,
+    steps,
+    isWinning,
+    startedAt,
+    finishedAt,
+    revealed,
+  } = state;
+  const { startGame, move, restart, exitToMenu } = mazeDispatch;
+  const { width, height } = useWindowSize();
+  const elapsed = useElapsed(startedAt, finishedAt);
 
+  const level = getLevel(levelId);
+  const best = useMemo(() => shortestPath(level.grid), [level]);
+  const lastPlayer = useMemo(loadLastPlayer, [gameStart]);
+
+  // Keyboard controls
   useEffect(() => {
-    if (type === "exit") {
-      saveScore(playerName, steps);
-      setShowModal((prev) => !prev);
-      setWinning(true);
+    if (!gameStart) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const direction = KEY_TO_DIRECTION[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+      if (!direction || e.metaKey || e.ctrlKey || e.altKey) return;
+      e.preventDefault();
+      move(direction);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [gameStart, move]);
+
+  // Save the score once per win
+  const savedRun = useRef<number | null>(null);
+  useEffect(() => {
+    if (isWinning && finishedAt && savedRun.current !== finishedAt) {
+      savedRun.current = finishedAt;
+      saveScore({ playerName, steps, level: levelId, timeMs: elapsed });
     }
-  }, [type]);
+  }, [isWinning, finishedAt, playerName, steps, levelId, elapsed]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const playerNameInput = (e.target as any)?.playerName;
-    const playerNameValue = playerNameInput?.value || "";
-
-    setPlayerName(playerNameValue);
-
-    setGameStart(true);
+  const handleStart = (name: string, id: LevelId) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ name, level: id }));
+    } catch {
+      // Storage can be unavailable (private mode); remembering is optional
+    }
+    startGame(name, id);
   };
 
-  const handleRestartGame = () => {
-    setRestartGame();
-    setShowModal(false);
-  };
-
-  const movePlayer = useCallback(
-    (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (isWinning) {
-        return false;
-      }
-      switch (event.key) {
-        case "ArrowRight":
-          if (
-            playerPosition + 1 <= 12 * 12 &&
-            playerPosition % 12 !== 0 &&
-            (rightCell?.type === "path" || rightCell?.type === "exit")
-          ) {
-            setPlayerPosition(playerPosition + 1);
-            return setSteps(steps + 1);
-          }
-          return false;
-        case "ArrowLeft":
-          if (playerPosition % 12 !== 1 && leftCell?.type === "path") {
-            setPlayerPosition(playerPosition - 1);
-            return setSteps(steps + 1);
-          }
-          return false;
-
-        case "ArrowUp":
-          if (playerPosition - 12 > 0 && topCell?.type === "path") {
-            setPlayerPosition(playerPosition - 12);
-            return setSteps(steps + 1);
-          }
-          return false;
-
-        case "ArrowDown":
-          if (playerPosition + 12 <= 12 * 12 && bottomCell?.type === "path") {
-            setPlayerPosition(playerPosition + 12);
-            return setSteps(steps + 1);
-          }
-      }
-    },
-    [
-      bottomCell?.type,
-      leftCell?.type,
-      playerPosition,
-      rightCell?.type,
-      setPlayerPosition,
-      setSteps,
-      steps,
-      topCell?.type,
-    ]
+  const background = (
+    <>
+      <Video autoPlay loop muted playsInline>
+        <source src={myVideo} type="video/mp4" />
+      </Video>
+      <Scrim />
+    </>
   );
+
+  if (!gameStart) {
+    return (
+      <>
+        {background}
+        <StartGame
+          onStart={handleStart}
+          defaultName={lastPlayer.name}
+          defaultLevel={lastPlayer.level}
+        />
+      </>
+    );
+  }
 
   return (
     <>
-      {showModal && (
+      {background}
+
+      {isWinning && <Confetti width={width} height={height} recycle={false} numberOfPieces={400} />}
+
+      {isWinning && (
         <Modal
-          title={`Congratulations ${playerName || ""}! 🥳 `}
-          content={`You have won in ${steps} moves! to continue playing, press accept.`}
-          buttonText="Accept"
-          setShowModal={setShowModal}
-          onClick={handleRestartGame}
-        />
-      )}
-
-      {isWinning && showModal && <Confetti width={width} height={height} />}
-
-      <Video autoPlay loop muted className="video">
-        <source src={myVideo} type="video/mp4" />
-        Your browser does not support the video tag.
-      </Video>
-
-      {!gameStart ? (
-        <StartGame handleSubmit={handleSubmit} />
-      ) : (
-        <Container
-          ref={(game) => game && game.focus()}
-          onKeyDown={movePlayer}
-          tabIndex={0}
+          title={`You escaped, ${playerName}! 🎉`}
+          onClose={exitToMenu}
+          actions={
+            <>
+              <Button type="button" variant="ghost" onClick={exitToMenu}>
+                Change level
+              </Button>
+              <Button type="button" onClick={restart} autoFocus>
+                Play again
+              </Button>
+            </>
+          }
         >
-          <Header>
-            <h2>CookUnity</h2>
-            <p>{`moves: ${steps}`}</p>
-          </Header>
-          <GameBoard
-            columns={columns}
-            rows={rows}
-            getAllAdjacentCells={setAllAdjacentCells}
-            getCurrentCell={setCurrentCell}
-          />
-          {isWinning && (
-            <Button type="button" onClick={handleRestartGame}>
-              Play again
-            </Button>
-          )}
-        </Container>
+          <Results>
+            <div>
+              <span>Moves</span>
+              <strong>{steps}</strong>
+            </div>
+            <div>
+              <span>Time</span>
+              <strong>{formatTime(elapsed)}</strong>
+            </div>
+            <div>
+              <span>Best possible</span>
+              <strong>{best ?? "—"}</strong>
+            </div>
+          </Results>
+          {best !== null &&
+            (steps === best ? (
+              <p>Perfect run: you found the shortest path!</p>
+            ) : (
+              <p>
+                {steps - best} moves more than the shortest path on {level.name}.
+              </p>
+            ))}
+        </Modal>
       )}
+
+      <Screen>
+        <Hud>
+          <HudGroup>
+            <PlayerName title={playerName}>{playerName}</PlayerName>
+            <LevelBadge>{level.name}</LevelBadge>
+          </HudGroup>
+          <HudGroup>
+            <Stat>
+              <StatLabel>Moves</StatLabel>
+              <StatValue>{steps}</StatValue>
+            </Stat>
+            <Stat>
+              <StatLabel>Time</StatLabel>
+              <StatValue>{formatTime(elapsed)}</StatValue>
+            </Stat>
+          </HudGroup>
+          <HudButtons>
+            <Button type="button" variant="ghost" onClick={restart}>
+              Restart
+            </Button>
+            <Button type="button" variant="ghost" onClick={exitToMenu}>
+              Menu
+            </Button>
+          </HudButtons>
+        </Hud>
+
+        <GameBoard
+          grid={level.grid}
+          position={position}
+          fogRadius={level.fogRadius}
+          revealed={revealed}
+          isWinning={isWinning}
+        />
+
+        <DPad aria-label="Movement controls">
+          {(["up", "left", "down", "right"] as Direction[]).map((direction) => (
+            <button
+              key={direction}
+              type="button"
+              className={direction}
+              aria-label={`Move ${direction}`}
+              onClick={() => move(direction)}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 7l6 8H6z" />
+              </svg>
+            </button>
+          ))}
+        </DPad>
+      </Screen>
     </>
   );
 };
 
-export default memo(Game);
+export default Game;
